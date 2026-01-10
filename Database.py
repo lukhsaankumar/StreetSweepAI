@@ -2,6 +2,7 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
 from datetime import datetime
+from bson.objectid import ObjectId 
 
 # Load .env file
 load_dotenv()  
@@ -30,9 +31,7 @@ tickets = db["tickets"]
 
 
 # EDITING THE DATABASE
-def create_user(name, email, password, role="volunteer", skills=None, location=None):
-    if skills is None:
-        skills = []
+def create_user(name, email, password, role="volunteer", location=None):
 
     # Simple password hash (never store plain passwords)
     import hashlib
@@ -43,7 +42,6 @@ def create_user(name, email, password, role="volunteer", skills=None, location=N
         "email": email,
         "password_hash": password_hash,
         "role": role,                # "volunteer" or "reporter"
-        "skills": skills,
         "location": location,        # {"lat": 43.77, "lon": -79.23}
         "availability": [],
         
@@ -60,16 +58,21 @@ def create_ticket(image_url, location, bounding_boxes):
         "image_url": image_url,
         "location": location,
         "bounding_boxes": bounding_boxes,
-        "timestamp": datetime.utcnow(),
+        "timestamp": datetime.now(datetime.UTC),
         "status": "pending",       # could also be "resolved"
-        "volunteer_id": None       # will be set when a volunteer picks it up
+        "user_id": None       # will be set when a volunteer picks it up
     }
 
     result = tickets.insert_one(ticket_data)
 
     return str(result.inserted_id)
 
+
+
 # Example usage:
+
+#creating a user:
 #user_id = create_user("Andrew Wang", "andrew@example.com", "password123", skills=["Python", "OpenCV"])
-#print("New user created with ID:", user_id)
-create_ticket("testurl", [4.2, -39], 10,)
+
+#creating a ticket:
+#create_ticket("testurl", [4.2, -39], 10,)
