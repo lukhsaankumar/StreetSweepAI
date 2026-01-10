@@ -1,15 +1,8 @@
-import os
 import time
-import requests
-from dotenv import load_dotenv
 from bson.objectid import ObjectId
 
-load_dotenv()
-
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")
-
 def _serialize(doc: dict) -> dict:
-    if "_id" in doc and isinstance(doc["_id"], ObjectId):
+    if doc and "_id" in doc and isinstance(doc["_id"], ObjectId):
         doc["_id"] = str(doc["_id"])
     return doc
 
@@ -20,14 +13,9 @@ def watch_ticket_inserts(tickets):
         try:
             with tickets.watch(pipeline) as stream:
                 for change in stream:
-                    doc = change["fullDocument"]
-                    payload = {
-                        "type": "ticket_created",
-                        "ticket": _serialize(doc)
-                    }
-
-                    if WEBHOOK_URL:
-                        requests.post(WEBHOOK_URL, json=payload, timeout=3)
-
+                    doc = change.get("fullDocument", {})
+                    doc = _serialize(doc)
+                    print(doc)
         except Exception:
             time.sleep(2)
+
