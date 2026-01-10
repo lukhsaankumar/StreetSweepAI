@@ -60,7 +60,7 @@ def create_ticket(image_url, location, severity, priority, description):
         "severity": severity,           # 1-10 scale
         "priority": priority,           # "low", "medium", "high"
         "description": description,
-        "timestamp": datetime.now(datetime.UTC),
+        "timestamp": datetime.utcnow(),
         "resolved": False
     }
 
