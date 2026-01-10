@@ -1,3 +1,6 @@
+import threading
+from watchers import watch_ticket_inserts
+from Database import tickets
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -9,6 +12,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = FastAPI()
+
+@app.on_event("startup")
+def start_watchers():
+    t = threading.Thread(
+        target=watch_ticket_inserts,
+        args=(tickets,),
+        daemon=True
+    )
+    t.start()
+
 
 # CORS middleware
 app.add_middleware(
