@@ -3,15 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from google import genai
 from google.genai import types
 from PIL import Image
-import io, os, json
-
+import io, os, json, base64
 from dotenv import load_dotenv
-load_dotenv()  # ensure .env is loaded
+
+load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
-if not GEMINI_API_KEY:
-    raise RuntimeError("GOOGLE_API_KEY not set")
-
 client = genai.Client(api_key=GEMINI_API_KEY)
 MODEL_NAME = "gemini-2.5-flash"
 
@@ -36,7 +33,10 @@ def optimize_image(image_bytes: bytes, max_size: int = 1024) -> bytes:
 
 @api.post("/api/classify")
 async def classify(file: UploadFile = File(...)):
+    # original bytes (for returning to frontend)
     raw = await file.read()
+
+    # smaller bytes (for Gemini only, to save tokens)
     optimized = optimize_image(raw)
 
     prompt = """
@@ -59,7 +59,6 @@ Example:
     )
 
     text = resp.text.strip()
-
     try:
         data = json.loads(text)
     except Exception:
@@ -67,4 +66,10 @@ Example:
         sev = int("".join(digits)) if digits else None
         data = {"severity": sev}
 
-    return data
+    # Return ORIGINAL image (not generated) as base64
+    raw_b64 = base64.b64encode(raw).decode("utf-8")
+
+    return {
+        "severity": data.get("severity"),
+        "image_base64": raw_b64,
+    }

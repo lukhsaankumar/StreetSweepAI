@@ -3,6 +3,7 @@ Requires GOOGLE_API_KEY env var to be set.
 """
 import asyncio
 import io
+import base64
 from pathlib import Path
 from fastapi import UploadFile
 from main import classify
@@ -16,7 +17,7 @@ async def run_test() -> None:
         print("No images found in cctv folder.")
         return
 
-    img_path = images[7]
+    img_path = images[0]
     print(f"Using image: {img_path.name}")
 
     # Build an UploadFile compatible object for the FastAPI handler.
@@ -24,7 +25,17 @@ async def run_test() -> None:
     upload = UploadFile(filename=img_path.name, file=io.BytesIO(file_bytes))
 
     result = await classify(file=upload)
-    print("API response:", result)
+    severity = result.get("severity")
+    print(f"Severity: {severity}")
+
+    img_b64 = result.get("image_base64")
+    if img_b64:
+        img_bytes = base64.b64decode(img_b64)
+        output_path = base_dir / "output.jpg"
+        output_path.write_bytes(img_bytes)
+        print(f"Wrote image to: {output_path}")
+    else:
+        print("No image_base64 in response.")
 
 
 if __name__ == "__main__":
