@@ -6,18 +6,18 @@ from tickets import router as tickets_router
 
 app = FastAPI()
 
-# Configure CORS - allow both local and production
+# Configure CORS - allow specific origins (no wildcard with credentials)
 origins = [
     "http://localhost:8080",
     "http://localhost:5173",
     "http://127.0.0.1:8080",
     "http://127.0.0.1:5173",
-    "*"  # Allow all origins for now
+    # Add your production frontend URL here when deployed
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=origins,  # No wildcard when using credentials
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
