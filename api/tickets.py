@@ -161,9 +161,9 @@ def resolve_ticket_endpoint(data: ResolveTicketRequest, current_user: dict = Dep
 
 @router.post("/claim")
 def claim_ticket_endpoint(ticket_id: str, user_id: str):
-    """Claim a ticket by a user."""
+    """Claim or unclaim a ticket by a user (toggles claim state)."""
     try:
-        result = claim_ticket(ticket_id)
+        result = claim_ticket(ticket_id, user_id)
         if result == 1:
             return {
                 "message": "Ticket claimed",
@@ -176,6 +176,7 @@ def claim_ticket_endpoint(ticket_id: str, user_id: str):
                 "message": "Ticket unclaimed",
                 "ticket_id": ticket_id,
                 "claimed": False,
+                "claimed_by": None,
             }
         return {"error": "Failed to claim ticket"}
     except Exception as e:
