@@ -8,7 +8,9 @@ from Database import users  # Mongo users collection [file:413]
 
 load_dotenv()
 
-JWT_SECRET = os.getenv("JWT_SECRET", "dev_secret")
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET:
+    raise RuntimeError("JWT_SECRET not found")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 
 security = HTTPBearer()

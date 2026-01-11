@@ -4,6 +4,7 @@ import os
 from datetime import datetime, timezone
 from bson.objectid import ObjectId 
 import bcrypt
+from pydantic import BaseModel
 
 # Load .env file
 load_dotenv()  
@@ -47,8 +48,7 @@ def create_user(name, email, password):
     result = users.insert_one(user_data)
     return str(result.inserted_id)
 
-def create_ticket(image_url, location, severity, description, claimed=False):
-
+def create_ticket(image_url, location, severity, description, claimed=False, priority: str | None = None):
     ticket_data = {
         "image_url": image_url,
         "location": location,
@@ -56,11 +56,10 @@ def create_ticket(image_url, location, severity, description, claimed=False):
         "description": description,
         "claimed": claimed,             # whether user claimed the ticket
         "timestamp": datetime.now(timezone.utc),
-        "resolved": False
+        "resolved": False,
+        "priority": priority
     }
-
     result = tickets.insert_one(ticket_data)
-
     return str(result.inserted_id)
 
 def resolve_ticket(ticket_id, user_id=None):
@@ -80,6 +79,13 @@ def resolve_ticket(ticket_id, user_id=None):
     )
     
     return result.modified_count == 1
+
+class UserRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+
+Users = users
 
 #creating a user:
 #user_id = create_user("Andrew Wang", "andrew@example.com", "password123", skills=["Python", "OpenCV"])

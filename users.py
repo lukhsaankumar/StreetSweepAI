@@ -1,8 +1,33 @@
-from fastapi import APIRouter
-from Database import UserRequest  # your existing request model [file:413]
+from fastapi import APIRouter, HTTPException, status
+from Database import UserRequest, Users  # your existing request model [file:413]
 from users_service import register_user, fetch_user_by_id, fetch_all_users
+from pydantic import BaseModel
+from auth import verify_password, create_access_token
 
 router = APIRouter()
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+# ==================== AUTHENTICATION ENDPOINTS =============
+@router.post("/login")
+def login(data: LoginRequest):
+    user = Users.find_one({"email": data.email})
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials",
+        )
+
+    hashed = user.get("password_hash")
+    if not hashed or not verify_password(data.password, hashed):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials",
+        )
+
+    token = create_access_token(str(user["_id"]))
+    return {"access_token": token, "token_type": "bearer"}
 
 # ==================== USER ENDPOINTS ====================
 

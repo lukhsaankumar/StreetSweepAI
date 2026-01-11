@@ -4,9 +4,7 @@ import os
 import base64
 import io
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException, status
+from auth import get_current_user
 
 from bson.objectid import ObjectId
 from dotenv import load_dotenv
@@ -17,6 +15,11 @@ import cloudinary.uploader
 from watchers import watch_ticket_inserts
 from Database import create_ticket, resolve_ticket, tickets
 from pydantic import BaseModel
+
+from fastapi import APIRouter, Depends, UploadFile, File
+from auth import get_current_user
+from gemini_api import classify_image
+
 
 load_dotenv()
 
@@ -61,7 +64,7 @@ def health_check():
     return {"status": "ok"}
 
 @router.post("/create-ticket")
-def create_ticket_endpoint(ticket: TicketRequest):
+def create_ticket_endpoint(ticket: TicketRequest, current_user: dict = Depends(get_current_user)):
     """
     Create a ticket from Gemini analysis results.
     Uploads base64 image to Cloudinary if provided.
@@ -142,7 +145,7 @@ def get_ticket(ticket_id: str):
         return {"error": str(e)}
 
 @router.post("/resolve-ticket")
-def resolve_ticket_endpoint(data: ResolveTicketRequest):
+def resolve_ticket_endpoint(data: ResolveTicketRequest, current_user: dict = Depends(get_current_user)):
     """Mark a ticket as resolved."""
     try:
         success = resolve_ticket(data.ticket_id, data.user_id)
@@ -155,3 +158,15 @@ def resolve_ticket_endpoint(data: ResolveTicketRequest):
         return {"error": "Failed to resolve ticket"}
     except Exception as e:
         return {"error": str(e)}
+    
+@router.post("/classify")
+async def classify_endpoint(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Classify a user-uploaded image for trash severity.
+    """
+    raw = await file.read()
+    return classify_image(raw)
+
