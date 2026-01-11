@@ -107,6 +107,8 @@ def compare_image(before_bytes: bytes, after_bytes: bytes) -> dict:
         contents=[prompt, before_part, after_part],
     )
 
+    print("Gemini compare response:", resp.text)
+
     text = resp.text.strip()
     try:
         data = json.loads(text)
