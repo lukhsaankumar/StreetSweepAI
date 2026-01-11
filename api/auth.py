@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from api.Database import users  # Mongo users collection [file:413]
+from Database import users  # Mongo users collection [file:413]
 
 load_dotenv()
 

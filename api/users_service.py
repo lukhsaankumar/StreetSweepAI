@@ -1,6 +1,6 @@
 # users_service.py
 from bson.objectid import ObjectId
-from api.Database import create_user, users, UserRequest  # [file:413]
+from Database import create_user, users, UserRequest  # [file:413]
 
 def register_user(user: UserRequest) -> dict:
     user_id = create_user(

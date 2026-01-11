@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, status
-from api.Database import UserRequest, Users  # your existing request model [file:413]
-from api.users_service import register_user, fetch_user_by_id, fetch_all_users
+from Database import UserRequest, Users  # your existing request model [file:413]
+from users_service import register_user, fetch_user_by_id, fetch_all_users
 from pydantic import BaseModel
-from api.auth import verify_password, create_access_token
+from auth import verify_password, create_access_token
 
 router = APIRouter()
 

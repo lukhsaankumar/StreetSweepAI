@@ -1,7 +1,7 @@
 from pathlib import Path
 from dotenv import load_dotenv
-from api.gemini_api import classify_image
-from api.Database import create_ticket, tickets
+from gemini_api import classify_image
+from Database import create_ticket, tickets
 
 load_dotenv()
 

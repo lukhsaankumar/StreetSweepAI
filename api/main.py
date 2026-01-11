@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.users import router as users_router
-from api.tickets import router as tickets_router
+from users import router as users_router
+from tickets import router as tickets_router
 
 app = FastAPI()
 
