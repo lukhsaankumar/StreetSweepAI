@@ -1,3 +1,12 @@
+# Use the newer builder to avoid deprecation issues
 [build]
-builder = "NIXPACKS"
-buildPlan.phases.install.cmds = ["pip install -r api/requirements.txt"]
+builder = "RAILPACK"
+
+[build.buildPlan.phases.install]
+# 'skip = true' prevents Railway from looking for requirements.txt in the root
+skip = true
+cmds = ["pip install -r api/requirements.txt"]
+
+[deploy]
+# Ensure your start command also points to the right path
+startCommand = "python api/main.py"
