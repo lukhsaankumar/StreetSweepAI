@@ -224,6 +224,9 @@ async def compare_endpoint(
 
         if ticket_id:
             tickets.update_one({"_id": ObjectId(ticket_id)}, {"$set": {"image_url": new_image_url}})
+        
+        severity = classify_image(raw2).get("severity", None)
+        tickets.update_one({"_id": ObjectId(ticket_id)}, {"$set": {"severity": severity}})
 
         return {
             "same_location": result.get("same_location"),
