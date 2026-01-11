@@ -46,5 +46,9 @@ htmlcov/
 .env
 .env.local
 
+# Local data / scripts not to commit
+testImages/
+ingest_general.py
+
 # OS
 Thumbs.db
