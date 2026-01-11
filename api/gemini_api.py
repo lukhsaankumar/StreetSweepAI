@@ -86,9 +86,9 @@ def compare_image(before_bytes: bytes, after_bytes: bytes) -> dict:
        (allowing for different angles, lighting, time of day, and amount of trash).
     2. If they are the same location, estimate how much visible trash/litter is present in photo B.
         Guess on a scale of 1-10 (1 = very clean, 10 = extremely trashy). If your estimate
-        was >= 5, consider the cleanup unsuccessful (false). Otherwise, consider it successful (true).
+        was >= 5, consider the cleanup unsuccessful. If your estimate < 5, consider it successful.
 
-    Return ONLY a JSON object with the following keys:
+    Return ONLY a JSON object with the following keys based on your analysis in the previous steps:
     - "same_location": true or false
     - "cleanup_successful": true or false
 
