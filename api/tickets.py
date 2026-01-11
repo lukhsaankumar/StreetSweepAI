@@ -18,7 +18,7 @@ from pydantic import BaseModel
 
 from fastapi import APIRouter, Depends, UploadFile, File
 from auth import get_current_user
-from gemini_api import classify_image
+from gemini_api import classify_image, compare_image
 
 
 load_dotenv()
@@ -162,7 +162,6 @@ def resolve_ticket_endpoint(data: ResolveTicketRequest, current_user: dict = Dep
 @router.post("/classify")
 async def classify_endpoint(
     file: UploadFile = File(...),
-    current_user: dict = Depends(get_current_user),
 ):
     """
     Classify a user-uploaded image for trash severity.
@@ -170,3 +169,14 @@ async def classify_endpoint(
     raw = await file.read()
     return classify_image(raw)
 
+@router.post("/compare")
+async def compare_endpoint(
+    file1: UploadFile = File(...),
+    file2: UploadFile = File(...),
+):
+    """
+    Compare two user-uploaded images for similarity.
+    """
+    raw1 = await file1.read()
+    raw2 = await file2.read()
+    return compare_image(raw1, raw2)
