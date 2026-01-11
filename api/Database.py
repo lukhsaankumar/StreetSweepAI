@@ -82,10 +82,17 @@ def resolve_ticket(ticket_id, user_id=None):
 
 def claim_ticket(ticket_id):
     """Mark a ticket as claimed by a user (set claimed=true)."""
-    result = tickets.update_one(
-        {"_id": ObjectId(ticket_id)},
-        {"$set": {"claimed": True}}
-    )
+    ticket = tickets.find_one({"_id": ObjectId(ticket_id)})
+    if ticket["claimed"] == False:
+        result = tickets.update_one(
+            {"_id": ObjectId(ticket_id)},
+            {"$set": {"claimed": True}}
+        )
+    else:
+        result = tickets.update_one(
+            {"_id": ObjectId(ticket_id)},
+            {"$set": {"claimed": False}}
+        )
     return result.modified_count == 1
 
 class UserRequest(BaseModel):
