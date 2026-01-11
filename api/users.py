@@ -1,5 +1,4 @@
-from urllib import response
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Response
 from Database import UserRequest, Users  # your existing request model [file:413]
 from users_service import register_user, fetch_user_by_id, fetch_all_users
 from pydantic import BaseModel
@@ -12,7 +11,7 @@ class LoginRequest(BaseModel):
     password: str
 # ==================== AUTHENTICATION ENDPOINTS =============
 @router.post("/login")
-def login(data: LoginRequest):
+def login(data: LoginRequest, response: Response):
     user = Users.find_one({"email": data.email})
     if not user:
         raise HTTPException(
@@ -43,7 +42,7 @@ def create_user_endpoint(user: UserRequest):
         return {"error": str(e)}
     
 @router.post("/logout")
-def logout():
+def logout(response: Response):
     """Logout user by clearing the cookie."""
     response.delete_cookie(key="user_id")
     return {"message": "Logged out successfully"}
