@@ -13,7 +13,7 @@ import cloudinary
 import cloudinary.uploader
 
 from watchers import watch_ticket_inserts
-from Database import create_ticket, resolve_ticket, tickets
+from Database import create_ticket, resolve_ticket, tickets, claim_ticket
 from pydantic import BaseModel
 
 from fastapi import APIRouter, Depends, UploadFile, File
@@ -156,6 +156,22 @@ def resolve_ticket_endpoint(data: ResolveTicketRequest, current_user: dict = Dep
                 "resolved": True,
             }
         return {"error": "Failed to resolve ticket"}
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.post("/claim")
+def claim_ticket_endpoint(ticket_id: str, user_id: str):
+    """Claim a ticket by a user."""
+    try:
+        result = claim_ticket(ticket_id)
+        if result == 1:
+            return {
+                "message": "Ticket claimed",
+                "ticket_id": ticket_id,
+                "claimed": True,
+                "claimed_by": user_id,
+            }
+        return {"error": "Failed to claim ticket"}
     except Exception as e:
         return {"error": str(e)}
     
