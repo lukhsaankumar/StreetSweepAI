@@ -4,7 +4,7 @@ import os
 import base64
 import io
 
-from auth import get_current_user
+from api.auth import get_current_user
 
 from bson.objectid import ObjectId
 from dotenv import load_dotenv
@@ -12,13 +12,13 @@ from dotenv import load_dotenv
 import cloudinary
 import cloudinary.uploader
 
-from watchers import watch_ticket_inserts
-from Database import create_ticket, resolve_ticket, tickets
+from api.watchers import watch_ticket_inserts
+from api.Database import create_ticket, resolve_ticket, tickets
 from pydantic import BaseModel
 
 from fastapi import APIRouter, Depends, UploadFile, File
-from auth import get_current_user
-from gemini_api import classify_image
+from api.auth import get_current_user
+from api.gemini_api import classify_image
 
 
 load_dotenv()
