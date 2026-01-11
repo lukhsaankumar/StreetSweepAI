@@ -78,14 +78,14 @@ def compare_image(before_bytes: bytes, after_bytes: bytes) -> dict:
     You are a city cleanliness inspector.
 
     You are given TWO photos:
-    - Photo A: supposed 'before' image of a location with trash.
-    - Photo B: supposed 'after' image of the same location after cleanup.
+    - Photo A: supposed to be 'before' image of a location with trash.
+    - Photo B: supposed to be 'after' image of the same location after cleanup.
 
     Your tasks:
     1. Decide if these two photos show the SAME physical location
        (allowing for different angles, lighting, time of day, and amount of trash).
     2. If they are the same location, estimate how much visible trash/litter is present in photo B.
-        Guess on a scale of 1-10 (1 = very clean, 10 = extremely trashy). If your estimate
+        Estimate how much visible trash is present on a scale of 1-10 (1 = very clean, 10 = extremely trashy). If your estimate
         was >= 5, consider the cleanup unsuccessful. If your estimate < 5, consider it successful.
 
     Return ONLY a JSON object with the following keys based on your analysis in the previous steps:
