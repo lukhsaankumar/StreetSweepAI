@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime, timezone
 from bson.objectid import ObjectId 
+import bcrypt
 
 # Load .env file
 load_dotenv()  
@@ -32,10 +33,8 @@ tickets = db["tickets"]
 
 # EDITING THE DATABASE
 def create_user(name, email, password):
-
-    # Simple password hash (never store plain passwords)
-    import hashlib
-    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    # password crypt
+    password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
     user_data = {
         "name": name,
