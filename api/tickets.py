@@ -180,3 +180,4 @@ async def compare_endpoint(
     raw1 = await file1.read()
     raw2 = await file2.read()
     return compare_image(raw1, raw2)
+# comment so i can push but i did these compare api in the last commit!!
