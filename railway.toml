@@ -1,0 +1,3 @@
+[build]
+builder = "NIXPACKS"
+buildPlan.phases.install.cmds = ["pip install -r api/requirements.txt"]
