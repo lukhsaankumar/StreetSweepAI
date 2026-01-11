@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from bson.objectid import ObjectId 
 
 # Load .env file
@@ -31,7 +31,7 @@ tickets = db["tickets"]
 
 
 # EDITING THE DATABASE
-def create_user(name, email, password, role="volunteer", location=None):
+def create_user(name, email, password):
 
     # Simple password hash (never store plain passwords)
     import hashlib
@@ -41,26 +41,22 @@ def create_user(name, email, password, role="volunteer", location=None):
         "name": name,
         "email": email,
         "password_hash": password_hash,
-        "role": role,                # "user" or "reporter"
-        "location": location,        # {"lat": 43.77, "lon": -79.23}
         "availability": [],
-        
-        "tickets_reported": [],
-        "tickets_completed": []
+        "points": 0
     }
 
     result = users.insert_one(user_data)
     return str(result.inserted_id)
 
-def create_ticket(image_url, location, severity, priority, description):
+def create_ticket(image_url, location, severity, description, claimed=False):
 
     ticket_data = {
         "image_url": image_url,
         "location": location,
         "severity": severity,           # 1-10 scale
-        "priority": priority,           # "low", "medium", "high"
         "description": description,
-        "timestamp": datetime.utcnow(),
+        "claimed": claimed,             # whether user claimed the ticket
+        "timestamp": datetime.now(timezone.utc),
         "resolved": False
     }
 
@@ -75,7 +71,7 @@ def resolve_ticket(ticket_id, user_id=None):
     if user_id:
         users.update_one(
             {"_id": ObjectId(user_id)},
-            {"$inc": {"tickets_completed": 1}}
+            {"$inc": {"points": 1}}
         )
     
     # Mark ticket as resolved

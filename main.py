@@ -8,8 +8,15 @@ from Database import create_user, create_ticket, resolve_ticket, users, tickets
 from bson.objectid import ObjectId
 import os
 from dotenv import load_dotenv
+import cloudinary
+import cloudinary.uploader
+import base64
+import io
 
 load_dotenv()
+
+# Configure Cloudinary
+cloudinary.config(cloudinary_url=os.getenv("CLOUDINARY_URL"))
 
 app = FastAPI()
 
@@ -34,18 +41,17 @@ app.add_middleware(
 
 # Request models
 class TicketRequest(BaseModel):
-    image_url: str
+    image_url: str = ""  # optional URL fallback
+    image_base64: str = None  # optional base64 image (data URI or raw)
     location: dict  # {"lat": 43.77, "lon": -79.23}
     severity: int  # 1-10 scale
-    priority: str  # "low", "medium", "high"
     description: str
+    claimed: bool = False  # whether ticket is claimed by a user
 
 class UserRequest(BaseModel):
     name: str
     email: str
     password: str
-    role: str = "volunteer"  # "volunteer" or "reporter"
-    location: dict = None
 
 class ResolveTicketRequest(BaseModel):
     ticket_id: str
@@ -63,21 +69,52 @@ def health_check():
 
 @app.post("/create-ticket")
 def create_ticket_endpoint(ticket: TicketRequest):
-    """Create a ticket from Gemini analysis results."""
+    """Create a ticket from Gemini analysis results. Uploads base64 image to Cloudinary if provided."""
     try:
+        image_url = ticket.image_url or ""
+        
+        # If base64 image provided, upload to Cloudinary
+        if ticket.image_base64:
+            data = ticket.image_base64
+            
+            # Remove data URI prefix if present
+            if data.startswith("data:"):
+                data = data.split(",", 1)[1]
+            
+            # Decode base64 to bytes
+            img_bytes = base64.b64decode(data)
+            
+            # Size validation (10 MB max)
+            MAX_SIZE = 10_000_000
+            if len(img_bytes) > MAX_SIZE:
+                return {"error": f"Image too large (max {MAX_SIZE} bytes)"}
+            
+            # Upload to Cloudinary
+            try:
+                upload_response = cloudinary.uploader.upload(
+                    io.BytesIO(img_bytes),
+                    resource_type="image",
+                    folder="streetsweep"  # organize in folder
+                )
+                image_url = upload_response.get("secure_url")
+            except Exception as e:
+                return {"error": f"Cloudinary upload failed: {str(e)}"}
+        
+        # Create ticket with image URL (Cloudinary or fallback)
         ticket_id = create_ticket(
-            image_url=ticket.image_url,
+            image_url=image_url,
             location=ticket.location,
             severity=ticket.severity,
-            priority=ticket.priority,
-            description=ticket.description
+            description=ticket.description,
+            claimed=ticket.claimed
         )
         
         return {
             "ticket_id": ticket_id,
+            "image_url": image_url,
             "severity": ticket.severity,
-            "priority": ticket.priority,
             "description": ticket.description,
+            "claimed": ticket.claimed,
             "resolved": False
         }
     except Exception as e:
@@ -127,15 +164,12 @@ def create_user_endpoint(user: UserRequest):
         user_id = create_user(
             name=user.name,
             email=user.email,
-            password=user.password,
-            role=user.role,
-            location=user.location
+            password=user.password
         )
         return {
             "user_id": user_id,
             "name": user.name,
-            "email": user.email,
-            "role": user.role
+            "email": user.email
         }
     except Exception as e:
         return {"error": str(e)}
