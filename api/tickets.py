@@ -196,14 +196,50 @@ async def classify_endpoint(
 async def compare_endpoint(
     file1: UploadFile = File(...),
     file2: UploadFile = File(...),
+    ticket_id: str | None = None,
 ):
     """
     Compare two user-uploaded images for similarity.
+
+    If the images are NOT both the same location and successful cleanup,
+    upload the second image to Cloudinary and replace the ticket's image_url
+    (when a ticket_id is provided).
     """
     raw1 = await file1.read()
     raw2 = await file2.read()
-    return compare_image(raw1, raw2)
-# comment so i can push but i did these compare api in the last commit!!
+    result = compare_image(raw1, raw2)
+
+    # Success path: same location AND cleanup successful
+    if result.get("same_location") is True and result.get("cleanup_successful") is True:
+        return True
+
+    # Fallback: upload second image and replace the ticket image_url
+    try:
+        upload_response = cloudinary.uploader.upload(
+            io.BytesIO(raw2),
+            resource_type="image",
+            folder="streetsweep",
+        )
+        new_image_url = upload_response.get("secure_url")
+
+        if ticket_id:
+            tickets.update_one({"_id": ObjectId(ticket_id)}, {"$set": {"image_url": new_image_url}})
+
+        return {
+            "same_location": result.get("same_location"),
+            "cleanup_successful": result.get("cleanup_successful"),
+            "image_url": new_image_url,
+            "ticket_id": ticket_id,
+            "updated": bool(ticket_id and new_image_url),
+        }
+    except Exception as e:
+        return {
+            "same_location": result.get("same_location"),
+            "cleanup_successful": result.get("cleanup_successful"),
+            "error": f"Cloudinary upload failed: {str(e)}",
+        }
+
+    
 
 @router.get("/insight")
 def get_insight_endpoint():
