@@ -18,7 +18,7 @@ from pydantic import BaseModel
 
 from fastapi import APIRouter, Depends, UploadFile, File
 from auth import get_current_user
-from gemini_api import classify_image, compare_image
+from gemini_api import classify_image, compare_image, get_insight
 
 
 load_dotenv()
@@ -181,3 +181,14 @@ async def compare_endpoint(
     raw2 = await file2.read()
     return compare_image(raw1, raw2)
 # comment so i can push but i did these compare api in the last commit!!
+
+@router.get("/insight")
+def get_insight_endpoint():
+    """
+    Get the latest insight summary.
+    """
+    try:
+        insight = get_insight()
+        return {"insight": insight}
+    except Exception as e:
+        return {"error": str(e)}

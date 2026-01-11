@@ -1,8 +1,9 @@
 from google import genai
 from google.genai import types
 from PIL import Image
-import io, os, json, base64
+import io, os, json, base64, json
 from dotenv import load_dotenv
+from collections import Counter
 
 load_dotenv()
 
@@ -122,3 +123,41 @@ def compare_image(before_bytes: bytes, after_bytes: bytes) -> dict:
         "same_location": data.get("same_location"),
         "cleanup_successful": data.get("cleanup_successful"),
     }
+
+def generate_insight(tickets: list[dict]) -> str:
+    """
+    Generate insights from ticket data using Gemini.
+    Returns a text summary.
+    """
+    locations = [tuple(t["location"]) for t in tickets]
+    severities = [t["severity"] for t in tickets if "severity" in t]
+
+    loc_counts = Counter(locations)
+    severity_dist = Counter(severities)
+
+    prompt_data = {
+        "total_tickets": len(tickets),
+        "top_locations": loc_counts.most_common(10),
+        "severity_distribution": severity_dist,
+    }
+    prompt = (
+        "You are a municipal waste planning assistant.\n"
+        f"Data summary: {json.dumps(prompt_data)}\n\n"
+        "Explain:\n"
+        "1) Key problem areas and trends.\n"
+        "2) Operational improvements (routing, frequency, scheduling).\n"
+        "3) Policy ideas (education, enforcement, infrastructure).\n"
+        "Keep it concise and specific."
+    )
+
+    resp = client.models.generate_content(
+        model=MODEL_NAME,
+        contents=[prompt],
+    )
+
+    return resp.text.strip()
+
+def get_insight() -> str:
+    with open("latest_insights.txt", "r", encoding="utf-8") as f:
+        content = f.read()
+    return content

@@ -1,7 +1,8 @@
 from pathlib import Path
 from dotenv import load_dotenv
-from gemini_api import classify_image
+from gemini_api import classify_image, generate_insight
 from Database import create_ticket, tickets
+from tickets import get_all_tickets
 
 load_dotenv()
 
@@ -46,3 +47,9 @@ for cctv_file in CCTV_DIR.iterdir():
             print(f"Low trash severity for {cctv_file.name}")
     except Exception as e:
         print(f"Error processing file {cctv_file.name}: {e}")
+
+# Insights
+tickets_data = get_all_tickets()
+insight = generate_insight(tickets_data)
+with open("insight.txt", "w", encoding="utf-8") as f:
+    f.write(insight)
