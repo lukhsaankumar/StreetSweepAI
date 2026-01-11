@@ -23,7 +23,7 @@ for cctv_file in CCTV_DIR.iterdir():
             continue
         image_url = f"http://example.com/cctv/{cctv_file.name}"
         location = {"lat": 43.77, "lon": -79.23}  # Placeholder location - can probably get from either eventual DB or filename
-        if severity >= 8:
+        if severity > 8:
             print(f"High trash severity detected in {cctv_file.name}: {severity}")
             ticket_id = create_ticket(
                 image_url=image_url,
