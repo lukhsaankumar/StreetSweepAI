@@ -1,7 +1,8 @@
 from pathlib import Path
 from dotenv import load_dotenv
-from gemini_api import classify_image
+from gemini_api import classify_image, generate_insight
 from Database import create_ticket, tickets
+from tickets import get_all_tickets
 
 load_dotenv()
 
@@ -22,7 +23,7 @@ for cctv_file in CCTV_DIR.iterdir():
             continue
         image_url = f"http://example.com/cctv/{cctv_file.name}"
         location = {"lat": 43.77, "lon": -79.23}  # Placeholder location - can probably get from either eventual DB or filename
-        if severity >= 8:
+        if severity > 8:
             print(f"High trash severity detected in {cctv_file.name}: {severity}")
             ticket_id = create_ticket(
                 image_url=image_url,
@@ -46,3 +47,9 @@ for cctv_file in CCTV_DIR.iterdir():
             print(f"Low trash severity for {cctv_file.name}")
     except Exception as e:
         print(f"Error processing file {cctv_file.name}: {e}")
+
+# Insights
+tickets_data = get_all_tickets()
+insight = generate_insight(tickets_data)
+with open("insight.txt", "w", encoding="utf-8") as f:
+    f.write(insight)

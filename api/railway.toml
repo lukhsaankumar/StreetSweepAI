@@ -1,0 +1,12 @@
+# Use the newer builder to avoid deprecation issues
+[build]
+builder = "RAILPACK"
+
+[build.buildPlan.phases.install]
+# Since Railway root directory is set to /api, use relative paths
+skip = true
+cmds = ["pip install -r requirements.txt"]
+
+[deploy]
+# Start command uses relative path from /api root
+startCommand = "python main.py"

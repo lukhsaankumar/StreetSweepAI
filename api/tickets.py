@@ -13,12 +13,12 @@ import cloudinary
 import cloudinary.uploader
 
 from watchers import watch_ticket_inserts
-from Database import create_ticket, resolve_ticket, tickets
+from Database import create_ticket, resolve_ticket, tickets, claim_ticket
 from pydantic import BaseModel
 
 from fastapi import APIRouter, Depends, UploadFile, File
 from auth import get_current_user
-from gemini_api import classify_image
+from gemini_api import classify_image, compare_image, get_insight
 
 
 load_dotenv()
@@ -158,11 +158,33 @@ def resolve_ticket_endpoint(data: ResolveTicketRequest, current_user: dict = Dep
         return {"error": "Failed to resolve ticket"}
     except Exception as e:
         return {"error": str(e)}
+
+@router.post("/claim")
+def claim_ticket_endpoint(ticket_id: str, user_id: str):
+    """Claim or unclaim a ticket by a user (toggles claim state)."""
+    try:
+        result = claim_ticket(ticket_id, user_id)
+        if result == 1:
+            return {
+                "message": "Ticket claimed",
+                "ticket_id": ticket_id,
+                "claimed": True,
+                "claimed_by": user_id,
+            }
+        elif result == 0:
+            return {
+                "message": "Ticket unclaimed",
+                "ticket_id": ticket_id,
+                "claimed": False,
+                "claimed_by": None,
+            }
+        return {"error": "Failed to claim ticket"}
+    except Exception as e:
+        return {"error": str(e)}
     
 @router.post("/classify")
 async def classify_endpoint(
     file: UploadFile = File(...),
-    current_user: dict = Depends(get_current_user),
 ):
     """
     Classify a user-uploaded image for trash severity.
@@ -170,3 +192,65 @@ async def classify_endpoint(
     raw = await file.read()
     return classify_image(raw)
 
+@router.post("/compare")
+async def compare_endpoint(
+    file1: UploadFile = File(...),
+    file2: UploadFile = File(...),
+    ticket_id: str | None = None,
+):
+    """
+    Compare two user-uploaded images for similarity.
+
+    If the images are NOT both the same location and successful cleanup,
+    upload the second image to Cloudinary and replace the ticket's image_url
+    (when a ticket_id is provided).
+    """
+    raw1 = await file1.read()
+    raw2 = await file2.read()
+    result = compare_image(raw1, raw2)
+
+    # Success path: same location AND cleanup successful
+    if result.get("same_location") is True and result.get("cleanup_successful") is True:
+        return True
+
+    # Fallback: upload second image and replace the ticket image_url
+    try:
+        upload_response = cloudinary.uploader.upload(
+            io.BytesIO(raw2),
+            resource_type="image",
+            folder="streetsweep",
+        )
+        new_image_url = upload_response.get("secure_url")
+
+        if ticket_id:
+            tickets.update_one({"_id": ObjectId(ticket_id)}, {"$set": {"image_url": new_image_url}})
+        
+        severity = classify_image(raw2).get("severity", None)
+        tickets.update_one({"_id": ObjectId(ticket_id)}, {"$set": {"severity": severity}})
+
+        return {
+            "same_location": result.get("same_location"),
+            "cleanup_successful": result.get("cleanup_successful"),
+            "image_url": new_image_url,
+            "ticket_id": ticket_id,
+            "updated": bool(ticket_id and new_image_url),
+        }
+    except Exception as e:
+        return {
+            "same_location": result.get("same_location"),
+            "cleanup_successful": result.get("cleanup_successful"),
+            "error": f"Cloudinary upload failed: {str(e)}",
+        }
+
+    
+
+@router.get("/insight")
+def get_insight_endpoint():
+    """
+    Get the latest insight summary.
+    """
+    try:
+        insight = get_insight()
+        return {"insight": insight}
+    except Exception as e:
+        return {"error": str(e)}
