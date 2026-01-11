@@ -1,16 +1,18 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from google import genai
-from google.genai import types
+from openai import OpenAI
 from PIL import Image
 import io, os, json, base64
 from dotenv import load_dotenv
 
 load_dotenv()
 
-GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
-client = genai.Client(api_key=GEMINI_API_KEY)
-MODEL_NAME = "gemini-2.5-flash"
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=OPENROUTER_API_KEY,
+)
+MODEL_NAME = "google/gemini-flash-1.5"  # Paid but fast, ~$0.075 per 1M tokens
 
 api = FastAPI()
 api.add_middleware(
@@ -39,8 +41,18 @@ async def classify(file: UploadFile = File(...)):
     # smaller bytes (for Gemini only, to save tokens)
     optimized = optimize_image(raw)
 
-    prompt = """
-You are a city cleanliness inspector.
+    # Encode optimized image to base64 for OpenRouter
+    optimized_b64 = base64.b64encode(optimized).decode("utf-8")
+
+    resp = client.chat.completions.create(
+        model=MODEL_NAME,
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": """You are a city cleanliness inspector.
 
 Given this single CCTV frame, estimate how much visible trash/litter is present.
 Return ONLY a JSON object with one key:
@@ -48,17 +60,20 @@ Return ONLY a JSON object with one key:
   (1 = very clean, 10 = extremely trashy).
 
 Example:
-{"severity": 7}
-"""
-
-    image_part = types.Part.from_bytes(data=optimized, mime_type="image/jpeg")
-
-    resp = client.models.generate_content(
-        model=MODEL_NAME,
-        contents=[prompt, image_part],
+{"severity": 7}"""
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{optimized_b64}"
+                        }
+                    }
+                ]
+            }
+        ]
     )
 
-    text = resp.text.strip()
+    text = resp.choices[0].message.content.strip()
     try:
         data = json.loads(text)
     except Exception:
