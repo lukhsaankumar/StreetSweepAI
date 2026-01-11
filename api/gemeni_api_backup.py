@@ -124,7 +124,7 @@ Your tasks:
 1. Decide if these two photos show the SAME physical location
    (allowing for different angles, lighting, time of day, and amount of trash).
 2. If they are the same location, decide if you think that the cleanup was successful
-    to a degree where a second cleanup is not necessary.
+    to a degree where a second cleanup is not necessary and there is not a significant amount of trash remaining.
 
 Return ONLY a JSON object with the following keys:
 - "same_location": true or false
