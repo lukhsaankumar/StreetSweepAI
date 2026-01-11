@@ -171,6 +171,12 @@ def claim_ticket_endpoint(ticket_id: str, user_id: str):
                 "claimed": True,
                 "claimed_by": user_id,
             }
+        elif result == 0:
+            return {
+                "message": "Ticket unclaimed",
+                "ticket_id": ticket_id,
+                "claimed": False,
+            }
         return {"error": "Failed to claim ticket"}
     except Exception as e:
         return {"error": str(e)}

@@ -88,12 +88,13 @@ def claim_ticket(ticket_id):
             {"_id": ObjectId(ticket_id)},
             {"$set": {"claimed": True}}
         )
+        return 1
     else:
         result = tickets.update_one(
             {"_id": ObjectId(ticket_id)},
             {"$set": {"claimed": False}}
         )
-    return result.modified_count == 1
+        return 0
 
 class UserRequest(BaseModel):
     name: str
