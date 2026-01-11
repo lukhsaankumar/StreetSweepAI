@@ -84,9 +84,9 @@ def compare_image(before_bytes: bytes, after_bytes: bytes) -> dict:
     Your tasks:
     1. Decide if these two photos show the SAME physical location
        (allowing for different angles, lighting, time of day, and amount of trash).
-    2. If they are the same location,  decide if the cleanup in Photo B is sufficiently completed for now
-    - Consider the cleanup successful if the amount of visible trash/litter in Photo B is much lower than in Photo A and only small, scattered pieces remain that do not obviously require another immediate cleanup visit.
-    - Consider the cleanup not successful if there is still a noticeable amount of trash (piles, clusters, or clearly messy areas) that a reasonable inspector would say still needs another cleanup.
+    2. If they are the same location, estimate how much visible trash/litter is present in photo B.
+        Guess on a scale of 1-10 (1 = very clean, 10 = extremely trashy). If your estimate
+        was >= 5, consider the cleanup unsuccessful (false). Otherwise, consider it successful (true).
 
     Return ONLY a JSON object with the following keys:
     - "same_location": true or false
