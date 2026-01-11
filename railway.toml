@@ -9,4 +9,4 @@ cmds = ["pip install -r api/requirements.txt"]
 
 [deploy]
 # Ensure your start command also points to the right path
-startCommand = "python api/main.py"
+startCommand = "python main.py"
