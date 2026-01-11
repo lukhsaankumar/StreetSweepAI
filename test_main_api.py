@@ -17,7 +17,7 @@ async def run_test() -> None:
         print("No images found in cctv folder.")
         return
 
-    img_path = images[0]
+    img_path = images[8]
     print(f"Using image: {img_path.name}")
 
     # Build an UploadFile compatible object for the FastAPI handler.
