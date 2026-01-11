@@ -80,15 +80,14 @@ def compare_image(before_bytes: bytes, after_bytes: bytes) -> dict:
     You are given TWO photos:
     - Photo A: supposed 'before' image of a location with trash.
     - Photo B: supposed 'after' image of the same location after cleanup.
-
+    
     Your tasks:
     1. Decide if these two photos show the SAME physical location
        (allowing for different angles, lighting, time of day, and amount of trash).
-    2. If they are the same location,  decide if the cleanup in Photo B is sufficiently completed for now
-    - Consider the cleanup successful if the amount of visible trash/litter in Photo B is much lower than in Photo A and only small, scattered pieces remain that do not obviously require another immediate cleanup visit.
-    - Consider the cleanup not successful if there is still a noticeable amount of trash (piles, clusters, or clearly messy areas) that a reasonable inspector would say still needs another cleanup.
+    2. If they are the same location, decide if the amount of visible trash/litter
+       in Photo B is clearly LESS than in Photo A (cleanup success).
 
-    Return ONLY a JSON object with the following keys:
+    Return ONLY a JSON object with the following keys based on your analysis in the previous steps:
     - "same_location": true or false
     - "cleanup_successful": true or false
 
@@ -106,6 +105,8 @@ def compare_image(before_bytes: bytes, after_bytes: bytes) -> dict:
         model=MODEL_NAME,
         contents=[prompt, before_part, after_part],
     )
+
+    print("Gemini compare response:", resp.text)
 
     text = resp.text.strip()
     try:
