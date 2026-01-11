@@ -158,6 +158,6 @@ def generate_insight(tickets: list[dict]) -> str:
     return resp.text.strip()
 
 def get_insight() -> str:
-    with open("latest_insights.txt", "r", encoding="utf-8") as f:
+    with open("insight.txt", "r", encoding="utf-8") as f:
         content = f.read()
     return content
